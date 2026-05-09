@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendar Cita</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<!-- ===== LOGIN (ADMIN) ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1 class="login-title">CABALLEROS</h1>
+    <p class="login-sub">Panel Administrador</p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <input id="loginUser" class="input" placeholder="Usuario admin" autocomplete="username">
+      <input id="loginPass" class="input" type="password" placeholder="Contraseña" autocomplete="current-password">
+    </div>
+    <button class="btn btn-gold btn-block" style="font-size:16px;padding:14px" onclick="doAdminLogin()">Ingresar</button>
+    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:10px" onclick="showClientView()">← Volver al inicio</button>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="mainApp">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div>
+        <div class="navbar-title">Caballeros</div>
+        <div class="navbar-sub">Barbería</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="showAdminLogin()" id="adminBtn">Admin</button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- HERO / INICIO -->
+    <div id="homeView">
+      <div class="hero">
+        <div class="hero-badge">Agenda tu cita hoy</div>
+        <h1 class="hero-title">TU ESTILO,<br><span>TU TURNO</span></h1>
+        <p class="hero-sub">Reserva con tu barbero favorito en minutos</p>
+        <button class="btn-book-main" onclick="startBooking()">
+          <span>AGENDAR CITA</span>
+        </button>
+      </div>
+
+      <div class="divider">Nuestro equipo</div>
+
+      <div id="homeBarbers" class="barber-grid" style="margin-bottom:40px">
+        <div class="loader"><div class="spinner"></div> Cargando equipo…</div>
+      </div>
+    </div>
+
+    <!-- BOOKING FLOW -->
+    <div id="flow">
+
+      <button class="nav-back" onclick="resetFlow()">← Volver al inicio</button>
+
+      <!-- STEP INDICATOR -->
+      <div class="step-indicator" id="stepIndicator">
+        <div class="step-dot-wrap">
+          <div class="step-dot active" id="dot1">1</div>
+          <span class="step-label">Barbero</span>
+        </div>
+        <div class="step-line" id="line1"></div>
+        <div class="step-dot-wrap">
+          <div class="step-dot" id="dot2">2</div>
+          <span class="step-label">Fecha</span>
+        </div>
+        <div class="step-line" id="line2"></div>
+        <div class="step-dot-wrap">
+          <div class="step-dot" id="dot3">3</div>
+          <span class="step-label">Hora</span>
+        </div>
+        <div class="step-line" id="line3"></div>
+        <div class="step-dot-wrap">
+          <div class="step-dot" id="dot4">4</div>
+          <span class="step-label">Tus datos</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: BARBERO -->
+      <div id="step1">
+        <div class="card">
+          <div class="card-title">Elige tu barbero</div>
+          <div id="barberGrid" class="barber-grid">
+            <div class="loader"><div class="spinner"></div> Cargando…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: FECHA -->
+      <div id="step2" style="display:none">
+        <div class="card">
+          <div class="card-title">Selecciona la fecha</div>
+          <div id="dateRow" class="date-row"></div>
+        </div>
+      </div>
+
+      <!-- STEP 3: HORA -->
+      <div id="step3" style="display:none">
+        <div class="card">
+          <div class="card-title">Elige un horario disponible</div>
+          <div id="timeGrid" class="time-grid">
+            <div class="loader"><div class="spinner"></div> Verificando disponibilidad…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: DATOS CLIENTE -->
+      <div id="step4" style="display:none">
+        <div class="card">
+          <div class="card-title">👤 Tus datos</div>
+          <div class="summary-box" id="bookingSummary"></div>
+          <div class="form-group">
+            <label class="form-label">Nombre completo *</label>
+            <input id="clientName" class="input" placeholder="¿Cómo te llamamos?">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Número de teléfono *</label>
+            <input id="clientPhone" class="input" type="tel" placeholder="ej: 3001234567">
+          </div>
+          <button class="btn-confirm" onclick="confirmBooking()">
+            CONFIRMAR CITA
+          </button>
+          <button class="btn btn-ghost btn-block" onclick="goToStep(3)">← Cambiar horario</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div class="success-screen" id="successScreen">
+      <h2 class="success-title">¡CITA AGENDADA!</h2>
+      <p class="success-sub">Tu reserva quedó registrada correctamente</p>
+      <div class="success-detail" id="successDetail"></div>
+      <a id="whatsappLink" class="btn-whatsapp" href="#" target="_blank" rel="noopener">
+        <span>NOTIFICAR AL BARBERO POR WHATSAPP</span>
+      </a>
+      <div class="wa-note">📱 Al tocar el botón se abrirá WhatsApp con el mensaje ya redactado listo para enviar</div>
+      <button class="btn btn-ghost btn-block" style="margin-top:18px" onclick="resetFlow()">Agendar otra cita</button>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /mainApp -->
+
+<!-- ===== ADMIN PANEL (overlay) ===== -->
+<div id="adminPanel">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div>
+        <div class="navbar-title">Caballeros</div>
+        <div class="navbar-sub">Panel Admin</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="font-size:13px;color:var(--text-muted)" id="adminNameDisplay"></span>
+      <button class="btn btn-ghost btn-sm" onclick="adminLogout()">Salir</button>
+    </div>
+  </nav>
+  <div class="container">
+
+    <div class="stats-grid" id="adminStats"></div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="adminTab('citas',this)">Citas</button>
+      <button class="tab" onclick="adminTab('barberos',this)">Barberos</button>
+    </div>
+
+    <!-- TAB CITAS -->
+    <div id="tabCitas" class="tab-content active">
+      <div class="card">
+        <div class="admin-header">
+          <h3 class="card-title" style="margin:0">Citas agendadas</h3>
+          <div class="filter-row" style="margin:0">
+            <select id="filterBarber" class="input" style="min-width:150px;min-height:36px">
+              <option value="">Todos los barberos</option>
+            </select>
+            <input type="date" id="filterDate" class="input" style="min-height:36px">
+            <button class="btn btn-ghost btn-sm" onclick="loadAdminAppointments()">Filtrar</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearAdminFilter()">Todos</button>
+          </div>
+        </div>
+        <div id="adminApptList" class="appointments-list">
+          <div class="loader"><div class="spinner"></div> Cargando citas…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB BARBEROS -->
+    <div id="tabBarberos" class="tab-content">
+      <div class="card">
+        <div class="card-title">Agregar barbero</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Nombre</label>
+            <input id="nb_name" class="input" placeholder="Nombre visible">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Especialidad</label>
+            <input id="nb_specialty" class="input" placeholder="ej: Clásico · Moderno">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">WhatsApp</label>
+            <input id="nb_phone" class="input" type="tel" placeholder="573001234567">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addAdminBarber()">+ Agregar barbero</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Equipo de barberos</div>
+        <div id="adminBarbersList" class="barbers-admin-list">
+          <div class="loader"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== EDIT APPOINTMENT MODAL ===== -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2 class="modal-title">Editar cita</h2>
+    <input type="hidden" id="editApptId">
+    <div class="form-group">
+      <label class="form-label">Nombre cliente</label>
+      <input id="editClient" class="input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Teléfono</label>
+      <input id="editPhone" class="input" type="tel">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Barbero</label>
+      <select id="editBarberSel" class="input"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input id="editDate" class="input" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Hora</label>
+      <select id="editTime" class="input"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('editModal')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveEditAppointment()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDIT BARBER MODAL ===== -->
+<div class="modal-overlay" id="editBarberModal">
+  <div class="modal">
+    <h2 class="modal-title">Editar barbero</h2>
+    <input type="hidden" id="editBarberId">
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input id="editBarberName" class="input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Especialidad</label>
+      <input id="editBarberSpec" class="input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">WhatsApp (con código de país)</label>
+      <input id="editBarberPhone" class="input" type="tel" placeholder="573001234567">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('editBarberModal')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveEditBarber()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FIREBASE + APP LOGIC ===== -->
+<script src="config/firebase.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
