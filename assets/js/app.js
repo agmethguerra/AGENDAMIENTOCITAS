@@ -5,7 +5,7 @@
 
 // Credenciales admin para el módulo de citas
 const ADMIN_CREDENTIALS = [
-  { user: 'admin', pass: 'admin123', name: 'Dueño - Admin' }
+  { user: 'admin', pass: '@4dm1n123', name: 'Dueño - Admin' }
 ];
 
 /* ======================================================
