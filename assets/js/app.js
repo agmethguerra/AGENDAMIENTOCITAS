@@ -610,7 +610,7 @@ function startAdminRefresh() {
       if (activeTab && activeTab.textContent.trim().includes('Citas')) loadAdminAppointments();
       if (activeTab && activeTab.textContent.trim().includes('Barberos')) loadAdminBarbers();
     }
-  }, 5000); // cada 5s para no saturar Firestore
+  }, 30000); // cada 5s para no saturar Firestore
 }
 
 function stopAdminRefresh() {
