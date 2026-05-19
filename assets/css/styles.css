@@ -189,7 +189,6 @@ body {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
   position: relative; overflow: hidden;
-  width: 180px;
   flex-shrink: 0;
 }
 .barber-card::before {
@@ -590,8 +589,8 @@ body {
   .hero-sub { font-size: 14px; }
 
   .home-barbers-wrap { gap: 14px; }
-  .barber-card { width: 150px; padding: 16px 12px; }
-  .barber-avatar { width: 68px; height: 68px; font-size: 24px; }
+  .barber-card { width: 60px; padding: 16px 12px; }
+  .barber-avatar { width: 100px; height: 100px; font-size: 24px; }
   .barber-name { font-size: 13px; }
   .barber-specialty { font-size: 11px; }
 

@@ -242,7 +242,7 @@ async function loadHomeBarbers() {
       return;
     }
     el.innerHTML = barbers.map(b => `
-      <div class="barber-card" onclick="startBookingWith('${b.id}')">
+      <div class="barber-card" onclick="startBookingWith('${b.id}')" style="width:100%;max-width:220px;">
         ${avatarHTML(b)}
         <div class="barber-name">${b.name}</div>
         <div class="barber-specialty">${b.specialty || 'Barbero profesional'}</div>
